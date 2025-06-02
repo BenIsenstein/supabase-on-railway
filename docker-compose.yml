@@ -9,6 +9,22 @@ name: supabase-on-railway-01
 
 services:
 
+  site:
+    container_name: supabase-on-railway-01-site
+    build:
+      context: ./site
+      dockerfile: dev.Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5173:80
+    volumes:
+      - ./site:/app
+      #- /app/node_modules
+    environment:
+      VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
+      VITE_SUPABASE_API_KEY: ${ANON_KEY}
+      VITE_PORT: 80
+
   studio:
     container_name: supabase-on-railway-01-studio
     build: ./studio
@@ -45,6 +61,7 @@ services:
       LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
       LOGFLARE_URL: http://analytics:4000
       NEXT_PUBLIC_ENABLE_LOGS: true
+      # NEXT_PUBLIC_BASE_PATH: /studio # Host the studio at a different url path behind kong
       # Comment to use Big Query backend for analytics
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
@@ -78,6 +95,7 @@ services:
       STUDIO_HOST: ${STUDIO_HOST}
       FUNCTIONS_HOST: ${FUNCTIONS_HOST}
       REALTIME_HOST: ${REALTIME_HOST}
+      SITE_HOST: ${SITE_HOST}
 
   auth:
     container_name: supabase-on-railway-01-auth
@@ -104,7 +122,7 @@ services:
       #   condition: service_healthy
     environment:
       GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
+      GOTRUE_API_PORT: 80
       API_EXTERNAL_URL: ${API_EXTERNAL_URL}
 
       GOTRUE_DB_DRIVER: postgres
@@ -123,6 +141,7 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
+      GOTRUE_MAILER_EXTERNAL_HOSTS: ${MAILER_EXTERNAL_HOSTS}
 
       # Uncomment to bypass nonce check in ID Token flow. Commonly set to true when using Google Sign In on mobile.
       # GOTRUE_EXTERNAL_SKIP_NONCE_CHECK: true
