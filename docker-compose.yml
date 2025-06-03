@@ -16,14 +16,13 @@ services:
       dockerfile: dev.Dockerfile
     restart: unless-stopped
     ports:
-      - 5173:80
+      - 5173:5173
     volumes:
       - ./site:/app
       #- /app/node_modules
     environment:
       VITE_SUPABASE_API_URL: ${SUPABASE_PUBLIC_URL}
       VITE_SUPABASE_API_KEY: ${ANON_KEY}
-      VITE_PORT: 80
 
   studio:
     container_name: supabase-on-railway-01-studio
@@ -40,13 +39,12 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
-    # depends_on:
-    #   analytics:
-    #     condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PORT: 80
 
       DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
       DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
@@ -74,9 +72,9 @@ services:
     ports:
       - ${KONG_HTTP_PORT}:8000/tcp
       - ${KONG_HTTPS_PORT}:8443/tcp
-    # depends_on:
-    #   analytics:
-    #     condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -118,11 +116,11 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 80
+      GOTRUE_API_PORT: 9999
       API_EXTERNAL_URL: ${API_EXTERNAL_URL}
 
       GOTRUE_DB_DRIVER: postgres
@@ -141,7 +139,6 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
-      GOTRUE_MAILER_EXTERNAL_HOSTS: ${MAILER_EXTERNAL_HOSTS}
 
       # Uncomment to bypass nonce check in ID Token flow. Commonly set to true when using Google Sign In on mobile.
       # GOTRUE_EXTERNAL_SKIP_NONCE_CHECK: true
@@ -189,8 +186,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
@@ -209,8 +206,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -319,8 +316,8 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
-      # analytics:
-      #   condition: service_healthy
+      analytics:
+        condition: service_healthy
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: ${POSTGRES_HOST}
@@ -333,11 +330,9 @@ services:
     container_name: supabase-on-railway-01-edge-functions
     build: ./functions
     restart: unless-stopped
-    ports:
-      - 9000:8080
-    # depends_on:
-      # analytics:
-      #   condition: service_healthy
+    depends_on:
+      analytics:
+        condition: service_healthy
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
@@ -347,7 +342,7 @@ services:
       # TODO: Allow configuring VERIFY_JWT per function. This PR might help: https://github.com/supabase/cli/pull/786
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
       EDGE_RUNTIME_PORT: 8081
-      CADDY_PORT: 80
+      CADDY_PORT: 9000
 
   analytics:
     container_name: supabase-on-railway-01-analytics
@@ -419,9 +414,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # depends_on:
-    #   vector:
-    #     condition: service_healthy
+    depends_on:
+      vector:
+        condition: service_healthy
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: ${POSTGRES_PORT}
