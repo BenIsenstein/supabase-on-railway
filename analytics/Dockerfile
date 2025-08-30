@@ -1,0 +1,1 @@
+FROM supabase/logflare:1.14.2

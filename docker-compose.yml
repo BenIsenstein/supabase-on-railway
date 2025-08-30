@@ -269,6 +269,11 @@ services:
       minio:
         condition: service_started
     environment:
+      # Server
+      SERVER_HOST: "::"
+      SERVER_PORT: 5000
+      SERVER_ADMIN_PORT: 5001
+
       # Auth
       AUTH_JWT_SECRET: ${JWT_SECRET}
       AUTH_JWT_ALGORITHM: HS256
@@ -407,7 +412,7 @@ services:
 
   analytics:
     container_name: supabase-on-railway-01-analytics
-    image: supabase/logflare:1.14.2
+    build: ./analytics
     restart: unless-stopped
     ports:
       - 4000:4000
@@ -493,10 +498,9 @@ services:
 
   vector:
     container_name: supabase-on-railway-01-vector
-    image: timberio/vector:0.28.1-alpine
+    build: ./vector
     restart: unless-stopped
     volumes:
-      - ./volumes/logs/vector.yml:/etc/vector/vector.yml:ro,z
       - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
     healthcheck:
       test:
@@ -513,11 +517,6 @@ services:
       retries: 3
     environment:
       LOGFLARE_API_KEY: ${LOGFLARE_API_KEY}
-    command:
-      [
-        "--config",
-        "/etc/vector/vector.yml"
-      ]
     security_opt:
       - "label=disable"
 
